@@ -1,0 +1,46 @@
+FROM python:3.9-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV TEMP_DIR=/tmp/worker
+ENV PUID=1000
+ENV PGID=1000
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create default user and group
+RUN groupadd -g ${PGID} worker && \
+    useradd -u ${PUID} -g worker -m worker
+
+# Set up application
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY google_lang.py .
+COPY main.py .
+COPY aeneas_sync.py .
+COPY rabbitmq_handler.py .
+COPY subtitle_translation.py .
+COPY whisper_transcription.py .
+
+# Create and set permissions for temp directory
+RUN mkdir -p ${TEMP_DIR} && \
+    chown -R worker:worker ${TEMP_DIR} /app
+
+# Switch to worker user
+USER worker
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD python -c "import socket; socket.create_connection(('rabbitmq', 5672), timeout=5)"
+
+# Graceful shutdown
+STOPSIGNAL SIGTERM
+
+CMD ["python", "main.py"]

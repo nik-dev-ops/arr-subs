@@ -1,0 +1,14 @@
+curl -X POST http://localhost:8000/webhook \
+     -H "Content-Type: application/json" \
+     -d '{
+           "eventType": "Download",
+           "series": {
+             "title": "Example Series",
+             "seasonNumber": 1
+           },
+           "episodeFile": {
+             "path": "/series/Example Series/Season 1/Episode 1.mkv",
+             "audioLanguages": ["hr"]
+           },
+           "target_language": "en"
+         }'

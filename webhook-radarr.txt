@@ -1,0 +1,13 @@
+curl -X POST http://localhost:8000/webhook \
+     -H "Content-Type: application/json" \
+     -d '{
+           "eventType": "Download",
+           "movie": {
+             "title": "Example Movie",
+             "filePath": "/movies/Example Movie.mkv"
+           },
+           "movieFile": {
+             "audioLanguages": ["hr"]
+           },
+           "target_language": "en"
+         }'
